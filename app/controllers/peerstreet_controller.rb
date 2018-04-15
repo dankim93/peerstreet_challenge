@@ -2,6 +2,7 @@ require 'csv'
 class PeerstreetController < ApplicationController
   def zip
     code = params[:code]
+    alternate = nil
     @json = {}
     @json[:Zip] = code
     @json[:MSA] = "N/A"
@@ -19,17 +20,26 @@ class PeerstreetController < ApplicationController
 #look for matching then put in information ELSE
 #      look for second column and go back to find that CBSA from column 1 to put in data
     CSV.foreach("./../cbsa_to_msa.csv", encoding: 'iso-8859-1:utf-8') do |row|
-      if row[0] == @json[:CBSA]
+      if row[0] == @json[:CBSA] && row[4] == 'Metropolitan Statistical Area'
         @json[:MSA] = row[3]
         @json[:Pop2015] = row[12]
         @json[:Pop2014] = row[11]
         return
       elsif row[1] == @json[:CBSA]
-        alternate = row[1]
-        return
+        alternate = row[0]
       end
     end
 
-
+    if !alternate.nil?
+      p alternate
+      CSV.foreach("./../cbsa_to_msa.csv", encoding: 'iso-8859-1:utf-8') do |row|
+        if row[0] == alternate && row[4] == 'Metropolitan Statistical Area'
+          p "pop2"
+          @json[:MSA] = row[3]
+          @json[:Pop2015] = row[12]
+          @json[:Pop2014] = row[11]
+        end
+      end
+    end
   end
 end
