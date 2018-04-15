@@ -11,14 +11,25 @@ class PeerstreetController < ApplicationController
     CSV.foreach("./../zip_to_cbsa.csv") do |row|
       if row[0] == code
         @json[:CBSA] = row[1]
-        break if @json[:CBSA] == "99999"
+        return if @json[:CBSA] == "99999"
       end
     end
 
+#if you cant match cbsa then exit process from this whole function
+#look for matching then put in information ELSE
+#      look for second column and go back to find that CBSA from column 1 to put in data
     CSV.foreach("./../cbsa_to_msa.csv", encoding: 'iso-8859-1:utf-8') do |row|
-      if row[0] == @json[:CBSA] || row[1] == @json[:CBSA]
-
+      if row[0] == @json[:CBSA]
+        @json[:MSA] = row[3]
+        @json[:Pop2015] = row[12]
+        @json[:Pop2014] = row[11]
+        return
+      elsif row[1] == @json[:CBSA]
+        alternate = row[1]
+        return
       end
     end
+
+
   end
 end
